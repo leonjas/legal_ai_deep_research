@@ -2,10 +2,12 @@ from typing import List, Dict, Optional, Union
 import os
 import logging
 from pathlib import Path
+from dataclasses import dataclass
 
 from app.utils.pdf_parser import extract_text
 from app.utils.clause_split import split_into_clauses
 from app.models.unfair_model import UnfairClauseModel
+from app.models.contract_analyzer import UnfairClause
 
 # Try to import settings, fallback to defaults if not available
 try:
@@ -16,20 +18,20 @@ except ImportError:
 
 # Import label normalization utilities
 try:
-    from app.utils.explain_labels import normalize_label, format_unfair_result, get_category_severity
+    from app.utils.explain_labels import normalize_label, format_unfair_result, get_explanation_for_label
 except ImportError:
     import logging
     logging.getLogger(__name__).warning("Label normalization utilities not available")
     def normalize_label(label): return label.lower()
     def format_unfair_result(pred): return pred
-    def get_category_severity(category): return "medium"
+    def get_explanation_for_label(label): return {"explanation": "No explanation available", "severity": "medium"}
 
 logger = logging.getLogger(__name__)
 
 class UnfairDetectionResult:
     """Container for unfair clause detection results."""
     
-    def __init__(self, file_path: str, total_clauses: int, unfair_clauses: List[Dict], 
+    def __init__(self, file_path: str, total_clauses: int, unfair_clauses: List[UnfairClause], 
                  model_info: Dict, processing_time: float = 0.0):
         self.file_path = file_path
         self.total_clauses = total_clauses
@@ -128,7 +130,7 @@ def run_unfair_pipeline(
             return UnfairDetectionResult(
                 file_path=file_path,
                 total_clauses=0,
-                unfair_clauses=[],
+                unfair_clauses=[],  # Empty list of UnfairClause objects
                 model_info={"model_name": "none"},
                 processing_time=time.time() - start_time
             )
@@ -145,7 +147,7 @@ def run_unfair_pipeline(
         
         # Step 4: Filter and process unfair clauses
         unfair_clauses = []
-        for pred in predictions:
+        for i, pred in enumerate(predictions):
             # Use normalized label for filtering
             normalized_label = normalize_label(pred.get("label", ""))
             
@@ -154,14 +156,38 @@ def run_unfair_pipeline(
                 continue
                 
             # Check confidence threshold
-            if pred.get("confidence", 0.0) >= min_conf:
+            confidence = pred.get("confidence", 0.0)
+            if confidence >= min_conf:
                 try:
-                    # Apply formatting and explanations
-                    formatted_pred = format_unfair_result(pred)
-                    unfair_clauses.append(formatted_pred)
-                except:
-                    # Fallback for compatibility
-                    unfair_clauses.append(pred)
+                    # Get explanation for the label
+                    explanation_info = get_explanation_for_label(normalized_label)
+                    
+                    # Create UnfairClause object
+                    unfair_clause = UnfairClause(
+                        text=pred.get("clause", ""),
+                        clause_type=normalized_label,
+                        confidence=confidence,
+                        explanation=explanation_info.get("explanation", "Detected as potentially unfair"),
+                        severity=explanation_info.get("severity", "medium"),
+                        sentence_index=i,
+                        start_position=0,
+                        end_position=len(pred.get("clause", ""))
+                    )
+                    unfair_clauses.append(unfair_clause)
+                except Exception as e:
+                    logger.warning(f"Error processing clause {i}: {e}")
+                    # Fallback UnfairClause
+                    unfair_clause = UnfairClause(
+                        text=pred.get("clause", ""),
+                        clause_type=pred.get("label", "unfair"),
+                        confidence=confidence,
+                        explanation="Detected as potentially unfair by ML model",
+                        severity="medium",
+                        sentence_index=i,
+                        start_position=0,
+                        end_position=len(pred.get("clause", ""))
+                    )
+                    unfair_clauses.append(unfair_clause)
         
         processing_time = time.time() - start_time
         
