@@ -12,7 +12,7 @@ An advanced contract analysis system that uses **LexGLUE methodology** and state
 
 ### Unfair Clause Detection
 - **Pattern-based Detection**: Rule-based identification of known unfair clause patterns
-- **ML-based Detection**: Fine-tuned BERT models for intelligent clause classification  
+- **ML-based Detection**: Pre-trained LexGLUE models (marmolpen3/lexglue-unfair-tos) for intelligent clause classification  
 - **LexGLUE Integration**: Uses UNFAIR-ToS models specifically trained for legal text
 - **Multi-format Support**: PDF, DOCX, DOC, and TXT file processing
 
@@ -57,6 +57,12 @@ Try the live demo: [Contract Analysis App](https://legalaideepresearch-rzy5kk9k2
 - **TXT** - Plain text files
 - **Direct Input** - Paste contract text directly
 
+## 🤖 **Models Used**
+
+- **Primary Classifier**: `marmolpen3/lexglue-unfair-tos` - Pre-trained LexGLUE model for unfair clause detection
+- **Sentence Embeddings**: `all-MiniLM-L6-v2` - SentenceTransformer for semantic similarity
+- **NLP Processing**: `en_core_web_sm` - spaCy model for text preprocessing
+
 ## 🛠 **Technology Stack**
 
 - **Frontend**: Streamlit
@@ -67,7 +73,7 @@ Try the live demo: [Contract Analysis App](https://legalaideepresearch-rzy5kk9k2
 ## 📊 **Analysis Methods**
 
 1. **Pattern-based Detection**: Uses predefined rules to identify common unfair clause patterns
-2. **Machine Learning Classification**: Employs fine-tuned BERT models for intelligent analysis
+2. **Machine Learning Classification**: Employs pre-trained LexGLUE transformer models for intelligent analysis
 3. **Hybrid Approach**: Combines both methods for comprehensive coverage
 
 ## 🎛 **Configuration**
