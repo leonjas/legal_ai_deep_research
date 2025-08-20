@@ -82,7 +82,7 @@ This project is licensed under the MIT License.
 
 ## 👨‍💻 **Author**
 
-Created by [LiangPoYen](https://github.com/leonjas) - jasmine.yen@mail.utoronto.ca
+Created by [LiangPoYen](https://github.com/leonjas) - jasmineyen16008@gmail.com
 
 ## 🤝 **Contributing**
 
