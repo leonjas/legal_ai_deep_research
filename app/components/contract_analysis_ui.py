@@ -9,6 +9,9 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import matplotlib.pyplot as plt
 import seaborn as sns
+from typing import List, Dict, Any
+from app.models.contract_analyzer import UnfairClause
+from app.models.unfair_pipeline import UnfairDetectionResult
 from typing import List, Dict, Any, Optional
 import io
 import base64
@@ -166,28 +169,28 @@ class ContractAnalysisUI:
             
             # Sort by confidence
             sorted_clauses = sorted(result.unfair_clauses, 
-                                  key=lambda x: x['confidence'], reverse=True)
+                                  key=lambda x: x.confidence, reverse=True)
             
             for i, clause in enumerate(sorted_clauses, 1):
-                with st.expander(f"📋 Clause #{i} - {clause['predicted_label']} "
-                               f"(Confidence: {clause['confidence']:.1%})"):
+                with st.expander(f"📋 Clause #{i} - {clause.clause_type} "
+                               f"(Confidence: {clause.confidence:.1%})"):
                     
                     # Display clause text
                     st.markdown("**Clause Text:**")
                     st.markdown(f'<div style="background-color: #ffebee; padding: 15px; '
                               f'border-left: 4px solid #f44336; border-radius: 4px; '
                               f'font-style: italic; margin: 10px 0;">'
-                              f'{clause["text"]}</div>', unsafe_allow_html=True)
+                              f'{clause.text}</div>', unsafe_allow_html=True)
                     
                     # Confidence and prediction details
                     col1, col2 = st.columns(2)
                     with col1:
-                        st.markdown(f"**Prediction:** {clause['predicted_label']}")
-                        st.markdown(f"**Confidence:** {clause['confidence']:.2%}")
+                        st.markdown(f"**Type:** {clause.clause_type}")
+                        st.markdown(f"**Confidence:** {clause.confidence:.2%}")
                     
                     with col2:
-                        st.markdown(f"**Position:** Index {clause.get('index', 'unknown')}")
-                        st.markdown(f"**Length:** {len(clause['text'].split())} words")
+                        st.markdown(f"**Position:** Index {clause.sentence_index}")
+                        st.markdown(f"**Length:** {len(clause.text.split())} words")
             
             # Export options
             ContractAnalysisUI._render_pipeline_export(result)
@@ -226,17 +229,17 @@ class ContractAnalysisUI:
             st.markdown("## 🚨 Detected Unfair Clauses")
             
             for i, clause in enumerate(result['unfair_clauses'], 1):
-                with st.expander(f"📋 Clause #{i} - {clause['predicted_label']} "
-                               f"(Confidence: {clause['confidence']:.1%})"):
+                with st.expander(f"📋 Clause #{i} - {clause.get('clause_type', 'Unknown')} "
+                               f"(Confidence: {clause.get('confidence', 0):.1%})"):
                     
                     st.markdown("**Clause Text:**")
                     st.markdown(f'<div style="background-color: #ffebee; padding: 15px; '
                               f'border-left: 4px solid #f44336; border-radius: 4px; '
                               f'font-style: italic; margin: 10px 0;">'
-                              f'{clause["text"]}</div>', unsafe_allow_html=True)
+                              f'{clause.get("text", "")}</div>', unsafe_allow_html=True)
                     
-                    st.markdown(f"**Prediction:** {clause['predicted_label']}")
-                    st.markdown(f"**Confidence:** {clause['confidence']:.2%}")
+                    st.markdown(f"**Type:** {clause.get('clause_type', 'Unknown')}")
+                    st.markdown(f"**Confidence:** {clause.get('confidence', 0):.2%}")
         
         else:
             st.success("✅ No potentially unfair clauses were detected in the provided text.")
@@ -314,12 +317,16 @@ DETAILED FINDINGS
                 report += f"""
 Issue #{i}:
 -----------
-Prediction: {clause['predicted_label']}
-Confidence: {clause['confidence']:.2%}
-Position: Index {clause.get('index', 'unknown')}
+Type: {clause.clause_type}
+Confidence: {clause.confidence:.2%}
+Position: Index {clause.sentence_index}
+Severity: {clause.severity}
 
 Text:
-"{clause['text']}"
+"{clause.text}"
+
+Explanation:
+{clause.explanation}
 
 {'='*50}
 """
@@ -346,17 +353,19 @@ END OF REPORT
         return report
     
     @staticmethod
-    def _generate_pipeline_csv(clauses: List[Dict]) -> str:
+    def _generate_pipeline_csv(clauses: List[UnfairClause]) -> str:
         """Generate CSV export for unfair clauses"""
         data = []
         for i, clause in enumerate(clauses, 1):
             data.append({
                 "Clause_Number": i,
-                "Predicted_Label": clause['predicted_label'],
-                "Confidence": clause['confidence'],
-                "Position_Index": clause.get('index', 'unknown'),
-                "Word_Count": len(clause['text'].split()),
-                "Text": clause['text'].replace('"', '""')  # Escape quotes
+                "Type": clause.clause_type,
+                "Confidence": clause.confidence,
+                "Position_Index": clause.sentence_index,
+                "Severity": clause.severity,
+                "Word_Count": len(clause.text.split()),
+                "Text": clause.text.replace('"', '""'),  # Escape quotes
+                "Explanation": clause.explanation.replace('"', '""')
             })
         
         df = pd.DataFrame(data)
