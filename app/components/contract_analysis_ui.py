@@ -18,12 +18,8 @@ import base64
 import tempfile
 import os
 from datetime import datetime
-from dataclasses import asdi                with col2:
-                    # Severity indicator
-                    severity_colors = {"high": "🔴", "medium": "🟠", "low": "🟡"}
-                    st.markdown(f"**Severity:** {severity_colors[clause.severity]} {clause.severity.title()}")
-                    st.markdown(f"**Confidence:** {clause.confidence:.1%}")
-                    st.markdown(f"**Word Count:** {len(clause.text.split())} words")om app.models.contract_analyzer import ContractAnalysisResult, UnfairClause
+from dataclasses import asdict
+from app.models.contract_analyzer import ContractAnalysisResult, UnfairClause
 from app.models.unfair_pipeline import UnfairDetectionResult, run_unfair_pipeline, run_unfair_pipeline_text
 
 class ContractAnalysisUI:
