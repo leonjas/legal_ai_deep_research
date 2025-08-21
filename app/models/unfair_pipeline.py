@@ -159,10 +159,10 @@ def run_unfair_pipeline(
             confidence = pred.get("confidence", 0.0)
             if confidence >= min_conf:
                 try:
-                    # Get explanation for the label
+                    # Get explanation for the label using utilities
                     explanation_info = get_explanation_for_label(normalized_label)
                     
-                    # Create UnfairClause object
+                    # Create UnfairClause object with rich explanation
                     unfair_clause = UnfairClause(
                         text=pred.get("clause", ""),
                         clause_type=normalized_label,
@@ -176,12 +176,12 @@ def run_unfair_pipeline(
                     unfair_clauses.append(unfair_clause)
                 except Exception as e:
                     logger.warning(f"Error processing clause {i}: {e}")
-                    # Fallback UnfairClause
+                    # Fallback UnfairClause with basic explanation
                     unfair_clause = UnfairClause(
                         text=pred.get("clause", ""),
-                        clause_type=pred.get("label", "unfair"),
+                        clause_type=normalized_label,
                         confidence=confidence,
-                        explanation="Detected as potentially unfair by ML model",
+                        explanation=f"This clause has been identified as potentially unfair ({normalized_label}). It may create an imbalance of rights or impose unreasonable terms on users.",
                         severity="medium",
                         sentence_index=i,
                         start_position=0,
@@ -256,10 +256,33 @@ def run_unfair_pipeline_text(
             
             if normalized_label != "fair" and pred.get("confidence", 0.0) >= min_conf:
                 try:
-                    formatted_pred = format_unfair_result(pred)
-                    unfair_clauses.append(formatted_pred)
-                except:
-                    unfair_clauses.append(pred)
+                    # Get rich explanation for the label
+                    explanation_info = get_explanation_for_label(normalized_label)
+                    
+                    # Enhanced result with rich explanation
+                    enhanced_pred = {
+                        **pred,
+                        "normalized_label": normalized_label,
+                        "explanation": explanation_info.get("explanation", "Detected as potentially unfair"),
+                        "severity": explanation_info.get("severity", "medium"),
+                        "category": explanation_info.get("category", "General Unfairness"),
+                        "recommendation": explanation_info.get("recommendation", "Consider reviewing this clause with legal counsel"),
+                        "clause_type": normalized_label  # Add for compatibility
+                    }
+                    unfair_clauses.append(enhanced_pred)
+                except Exception as e:
+                    logger.warning(f"Error processing clause: {e}")
+                    # Fallback with basic explanation
+                    enhanced_pred = {
+                        **pred,
+                        "normalized_label": normalized_label,
+                        "explanation": f"This clause has been identified as potentially unfair ({normalized_label})",
+                        "severity": "medium",
+                        "category": "General Unfairness",
+                        "recommendation": "Consider reviewing this clause with legal counsel",
+                        "clause_type": normalized_label
+                    }
+                    unfair_clauses.append(enhanced_pred)
         
         processing_time = time.time() - start_time
         

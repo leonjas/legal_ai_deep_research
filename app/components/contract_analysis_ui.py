@@ -18,8 +18,12 @@ import base64
 import tempfile
 import os
 from datetime import datetime
-
-from app.models.contract_analyzer import ContractAnalysisResult, UnfairClause
+from dataclasses import asdi                with col2:
+                    # Severity indicator
+                    severity_colors = {"high": "🔴", "medium": "🟠", "low": "🟡"}
+                    st.markdown(f"**Severity:** {severity_colors[clause.severity]} {clause.severity.title()}")
+                    st.markdown(f"**Confidence:** {clause.confidence:.1%}")
+                    st.markdown(f"**Word Count:** {len(clause.text.split())} words")om app.models.contract_analyzer import ContractAnalysisResult, UnfairClause
 from app.models.unfair_pipeline import UnfairDetectionResult, run_unfair_pipeline, run_unfair_pipeline_text
 
 class ContractAnalysisUI:
@@ -189,8 +193,13 @@ class ContractAnalysisUI:
                         st.markdown(f"**Confidence:** {clause.confidence:.2%}")
                     
                     with col2:
-                        st.markdown(f"**Position:** Index {clause.sentence_index}")
+                        st.markdown(f"**Severity:** {clause.severity.title()}")
                         st.markdown(f"**Length:** {len(clause.text.split())} words")
+                    
+                    # Add explanation if available
+                    if hasattr(clause, 'explanation') and clause.explanation:
+                        st.markdown("**Why this might be problematic:**")
+                        st.markdown(f"💡 {clause.explanation}")
             
             # Export options
             ContractAnalysisUI._render_pipeline_export(result)
@@ -240,6 +249,12 @@ class ContractAnalysisUI:
                     
                     st.markdown(f"**Type:** {clause.get('clause_type', 'Unknown')}")
                     st.markdown(f"**Confidence:** {clause.get('confidence', 0):.2%}")
+                    
+                    # Add explanation if available
+                    explanation = clause.get('explanation', '')
+                    if explanation:
+                        st.markdown("**Why this might be problematic:**")
+                        st.markdown(f"💡 {explanation}")
         
         else:
             st.success("✅ No potentially unfair clauses were detected in the provided text.")
@@ -264,29 +279,52 @@ class ContractAnalysisUI:
         with col2:
             # Export unfair clauses to CSV
             if result.unfair_clauses:
-                csv_data = ContractAnalysisUI._generate_pipeline_csv(result.unfair_clauses)
-                st.download_button(
-                    label="📊 Export to CSV",
-                    data=csv_data,
-                    file_name=f"unfair_clauses_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
-                    mime="text/csv"
-                )
+                try:
+                    csv_data = ContractAnalysisUI._generate_pipeline_csv(result.unfair_clauses)
+                    st.download_button(
+                        label="📊 Export to CSV",
+                        data=csv_data,
+                        file_name=f"unfair_clauses_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+                        mime="text/csv"
+                    )
+                except Exception as e:
+                    st.error(f"❌ CSV export failed: {str(e)}")
+                    st.info("💡 Please check the file format and try again.")
         
         with col3:
             # Generate JSON export
             import json
+            from dataclasses import asdict
+            
+            # Convert UnfairClause objects to dictionaries
+            serializable_clauses = []
+            for clause in result.unfair_clauses:
+                if hasattr(clause, '__dict__'):
+                    # If it's a dataclass, convert to dict
+                    clause_dict = asdict(clause)
+                else:
+                    # If it's already a dict, use as is
+                    clause_dict = clause
+                serializable_clauses.append(clause_dict)
+            
             json_data = {
                 "summary": result.get_summary(),
-                "unfair_clauses": result.unfair_clauses,
+                "unfair_clauses": serializable_clauses,
                 "model_info": result.model_info,
                 "analysis_timestamp": datetime.now().isoformat()
             }
-            st.download_button(
-                label="🔗 Export to JSON",
-                data=json.dumps(json_data, indent=2),
-                file_name=f"analysis_results_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
-                mime="application/json"
-            )
+            
+            try:
+                json_str = json.dumps(json_data, indent=2, ensure_ascii=False)
+                st.download_button(
+                    label="🔗 Export to JSON",
+                    data=json_str,
+                    file_name=f"analysis_results_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
+                    mime="application/json"
+                )
+            except Exception as e:
+                st.error(f"❌ JSON export failed: {str(e)}")
+                st.info("💡 Please check the file format and try again.")
     
     @staticmethod
     def _generate_pipeline_report(result: UnfairDetectionResult) -> str:
@@ -314,19 +352,36 @@ DETAILED FINDINGS
         
         if result.unfair_clauses:
             for i, clause in enumerate(result.unfair_clauses, 1):
+                # Handle both dataclass objects and dictionaries
+                if hasattr(clause, '__dict__'):
+                    # It's a dataclass object
+                    clause_type = clause.clause_type
+                    confidence = clause.confidence
+                    sentence_index = clause.sentence_index
+                    severity = clause.severity
+                    text = clause.text
+                    explanation = clause.explanation
+                else:
+                    # It's a dictionary
+                    clause_type = clause.get('clause_type', 'unknown')
+                    confidence = clause.get('confidence', 0)
+                    sentence_index = clause.get('sentence_index', 0)
+                    severity = clause.get('severity', 'medium')
+                    text = clause.get('text', '')
+                    explanation = clause.get('explanation', 'No explanation available')
+                
                 report += f"""
 Issue #{i}:
 -----------
-Type: {clause.clause_type}
-Confidence: {clause.confidence:.2%}
-Position: Index {clause.sentence_index}
-Severity: {clause.severity}
+Type: {clause_type}
+Confidence: {confidence:.2%}
+Severity: {severity}
 
 Text:
-"{clause.text}"
+"{text}"
 
 Explanation:
-{clause.explanation}
+{explanation}
 
 {'='*50}
 """
@@ -357,16 +412,29 @@ END OF REPORT
         """Generate CSV export for unfair clauses"""
         data = []
         for i, clause in enumerate(clauses, 1):
-            data.append({
-                "Clause_Number": i,
-                "Type": clause.clause_type,
-                "Confidence": clause.confidence,
-                "Position_Index": clause.sentence_index,
-                "Severity": clause.severity,
-                "Word_Count": len(clause.text.split()),
-                "Text": clause.text.replace('"', '""'),  # Escape quotes
-                "Explanation": clause.explanation.replace('"', '""')
-            })
+            # Handle both dataclass objects and dictionaries
+            if hasattr(clause, '__dict__'):
+                # It's a dataclass object
+                data.append({
+                    "Clause_Number": i,
+                    "Type": clause.clause_type,
+                    "Confidence": clause.confidence,
+                    "Severity": clause.severity,
+                    "Word_Count": len(clause.text.split()),
+                    "Text": clause.text.replace('"', '""'),  # Escape quotes
+                    "Explanation": clause.explanation.replace('"', '""') if clause.explanation else ""
+                })
+            else:
+                # It's a dictionary
+                data.append({
+                    "Clause_Number": i,
+                    "Type": clause.get('clause_type', ''),
+                    "Confidence": clause.get('confidence', 0),
+                    "Severity": clause.get('severity', ''),
+                    "Word_Count": len(clause.get('text', '').split()),
+                    "Text": clause.get('text', '').replace('"', '""'),
+                    "Explanation": clause.get('explanation', '').replace('"', '""')
+                })
         
         df = pd.DataFrame(data)
         return df.to_csv(index=False)
@@ -674,7 +742,7 @@ END OF REPORT
                 "Type": clause.clause_type.replace('_', ' ').title(),
                 "Severity": clause.severity.title(),
                 "Confidence": f"{clause.confidence:.1%}",
-                "Sentence": clause.sentence_index + 1,
+                "Words": len(clause.text.split()),
                 "Text Preview": clause.text[:100] + "..." if len(clause.text) > 100 else clause.text
             })
         
@@ -796,7 +864,7 @@ End of Report
                 "Clause_Type": clause.clause_type,
                 "Severity": clause.severity,
                 "Confidence": clause.confidence,
-                "Sentence_Index": clause.sentence_index,
+                "Word_Count": len(clause.text.split()),
                 "Text": clause.text.replace('"', '""'),  # Escape quotes
                 "Explanation": clause.explanation.replace('"', '""')
             })
