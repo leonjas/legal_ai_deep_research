@@ -562,7 +562,7 @@ END OF REPORT
                     severity_colors = {"high": "🔴", "medium": "🟠", "low": "🟡"}
                     st.markdown(f"**Severity:** {severity_colors[clause.severity]} {clause.severity.title()}")
                     st.markdown(f"**Confidence:** {clause.confidence:.1%}")
-                    st.markdown(f"**Position:** Sentence {clause.sentence_index + 1}")
+                    st.markdown(f"**Word Count:** {len(clause.text.split())} words")
                 
                 # Explanation
                 st.markdown("**Why this might be unfair:**")
