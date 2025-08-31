@@ -10,17 +10,29 @@ An advanced contract analysis system that uses **LexGLUE methodology** and state
 
 ## 🎯 **Primary Features**
 
-### Unfair Clause Detection
+### 1. Contract Summarization 📝
+- **Intelligent Summarization**: Extract key contract details and terms
+- **Key Information Extraction**: Identify parties, dates, obligations, and critical clauses
+- **Structured Output**: Organized summary with clear sections
+- **Multi-format Support**: PDF, DOCX, DOC, and TXT file processing
+
+### 2. Unfair Clause Detection ⚖️
 - **Pattern-based Detection**: Rule-based identification of known unfair clause patterns
 - **ML-based Detection**: Pre-trained LexGLUE models (marmolpen3/lexglue-unfair-tos) for intelligent clause classification  
 - **LexGLUE Integration**: Uses UNFAIR-ToS models specifically trained for legal text
-- **Multi-format Support**: PDF, DOCX, DOC, and TXT file processing
+- **Risk Assessment**: Categorizes clauses by unfairness severity with confidence scoring
 
-### Advanced Analysis
-- **Risk Assessment**: Categorizes clauses by unfairness severity
-- **Detailed Recommendations**: Provides specific suggestions for contract improvements
-- **Export Capabilities**: Download analysis results in multiple formats
-- **Interactive Interface**: User-friendly Streamlit web application
+### 3. Appeal Recommendations 🎯
+- **FAISS-powered Search**: Vector similarity search for legal precedents
+- **Contextual Recommendations**: Tailored appeal strategies based on contract content
+- **Risk-based Prioritization**: Focus on high-risk clauses with actionable advice
+- **Legal Precedent Analysis**: Reference similar cases and outcomes
+
+### Advanced Features
+- **Comprehensive Analysis**: All three features work together for complete contract review
+- **Interactive Interface**: User-friendly Streamlit web application with configurable settings
+- **Export Capabilities**: Download analysis results in multiple formats (JSON, CSV, PDF)
+- **Real-time Processing**: Fast analysis with progress indicators
 
 ## 🚀 **Quick Start**
 
@@ -59,22 +71,39 @@ Try the live demo: [Contract Analysis App](https://legalaideepresearch-rzy5kk9k2
 
 ## 🤖 **Models Used**
 
-- **Primary Classifier**: `marmolpen3/lexglue-unfair-tos` - Pre-trained LexGLUE model for unfair clause detection
-- **Sentence Embeddings**: `all-MiniLM-L6-v2` - SentenceTransformer for semantic similarity
-- **NLP Processing**: `en_core_web_sm` - spaCy model for text preprocessing
+- **Primary Unfair Clause Classifier**: `marmolpen3/lexglue-unfair-tos` - Pre-trained LexGLUE model for unfair clause detection
+- **Contract Summarizer**: `facebook/bart-large-cnn` - Advanced summarization model for legal text
+- **Appeal Recommender**: `all-MiniLM-L6-v2` - SentenceTransformer for semantic similarity and FAISS vector search
+- **NLP Processing**: `en_core_web_sm` - spaCy model for text preprocessing and clause extraction
 
 ## 🛠 **Technology Stack**
 
-- **Frontend**: Streamlit
-- **ML Models**: Transformers, PyTorch, spaCy
+- **Frontend**: Streamlit with interactive UI components
+- **ML Models**: Transformers, PyTorch, spaCy, FAISS
 - **Document Processing**: PyMuPDF, python-docx
-- **Visualization**: Matplotlib, Plotly, Seaborn
+- **Text Analysis**: NLTK, SentenceTransformers
+- **Data Handling**: Pandas, NumPy
 
 ## 📊 **Analysis Methods**
 
-1. **Pattern-based Detection**: Uses predefined rules to identify common unfair clause patterns
-2. **Machine Learning Classification**: Employs pre-trained LexGLUE transformer models for intelligent analysis
-3. **Hybrid Approach**: Combines both methods for comprehensive coverage
+### Three-Tier Analysis System
+1. **Contract Summarization**: 
+   - Extract key contract elements (parties, terms, obligations)
+   - Generate structured summaries with risk indicators
+   - Identify critical dates and financial terms
+
+2. **Unfair Clause Detection**: 
+   - Pattern-based detection using legal rule sets
+   - ML classification with LexGLUE transformer models
+   - Confidence scoring and severity assessment
+
+3. **Appeal Recommendations**:
+   - FAISS-powered semantic search for legal precedents
+   - Context-aware recommendation generation
+   - Risk-based prioritization of actionable items
+
+### Hybrid Approach
+Combines rule-based patterns, machine learning models, and vector similarity search for comprehensive contract analysis.
 
 ## 🎛 **Configuration**
 
