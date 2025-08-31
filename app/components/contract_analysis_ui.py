@@ -138,7 +138,19 @@ class ContractAnalysisUI:
         col1, col2, col3, col4 = st.columns(4)
         
         with col1:
-            st.metric("Document", filename)
+            # Clean up filename display
+            display_name = filename
+            if len(display_name) > 20:
+                # Show first 15 chars + ... + extension
+                parts = display_name.split('.')
+                if len(parts) > 1:
+                    base_name = parts[0][:15]
+                    extension = parts[-1]
+                    display_name = f"{base_name}...{extension}"
+                else:
+                    display_name = display_name[:20] + "..."
+            
+            st.metric("Document", display_name)
         
         with col2:
             st.metric("Total Clauses", summary['total_clauses'])

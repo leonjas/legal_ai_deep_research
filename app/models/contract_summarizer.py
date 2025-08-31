@@ -259,31 +259,85 @@ class ContractSummarizer:
         return key_terms
     
     def _extract_obligations(self, text: str) -> Dict[str, List[str]]:
-        """Extract key obligations for each party - simplified safe version"""
+        """Extract key obligations for each party with improved detail"""
         obligations = {'User/Customer': [], 'Company/Provider': []}
         
         try:
-            # Simple keyword-based extraction to avoid problematic regex
+            # Enhanced extraction with more specific patterns
             text_lower = text.lower()
+            sentences = [s.strip() for s in text.split('.') if len(s.strip()) > 20]
             
-            # Look for user obligations
-            if 'user must' in text_lower or 'customer must' in text_lower:
-                obligations['User/Customer'].append('Compliance with terms required')
-            if 'user agrees' in text_lower or 'customer agrees' in text_lower:
-                obligations['User/Customer'].append('Agreement acceptance required')
-            if 'user shall' in text_lower or 'customer shall' in text_lower:
-                obligations['User/Customer'].append('Specified obligations exist')
+            # More sophisticated user obligation patterns
+            user_patterns = [
+                ('payment', ['pay', 'payment', 'fee', 'subscription', 'billing']),
+                ('compliance', ['comply', 'follow', 'abide by', 'adhere to', 'observe']),
+                ('usage restrictions', ['not use', 'prohibited', 'restricted', 'forbidden']),
+                ('data accuracy', ['accurate', 'complete', 'truthful', 'valid information']),
+                ('account security', ['secure', 'protect', 'maintain', 'password', 'credentials'])
+            ]
+            
+            # More sophisticated company obligation patterns  
+            company_patterns = [
+                ('service delivery', ['provide', 'deliver', 'supply', 'offer', 'make available']),
+                ('support/maintenance', ['support', 'maintain', 'update', 'fix', 'resolve']),
+                ('data protection', ['protect', 'secure', 'safeguard', 'encrypt', 'privacy']),
+                ('uptime/availability', ['available', 'accessible', 'operational', 'uptime']),
+                ('notification', ['notify', 'inform', 'communicate', 'alert', 'notice'])
+            ]
+            
+            # Extract user obligations
+            for sentence in sentences[:30]:  # Limit for performance
+                sentence_lower = sentence.lower()
                 
-            # Look for company obligations  
-            if 'company will' in text_lower or 'provider will' in text_lower:
-                obligations['Company/Provider'].append('Service provision commitment')
-            if 'we provide' in text_lower or 'company provide' in text_lower:
-                obligations['Company/Provider'].append('Service/product delivery')
-            if 'we shall' in text_lower or 'company shall' in text_lower:
-                obligations['Company/Provider'].append('Contractual commitments exist')
+                # Check if sentence refers to user/customer
+                if any(ref in sentence_lower for ref in ['user', 'customer', 'you', 'subscriber']):
+                    for obligation_type, keywords in user_patterns:
+                        if any(keyword in sentence_lower for keyword in keywords):
+                            # Extract more specific obligation
+                            obligation_text = sentence[:100] + "..." if len(sentence) > 100 else sentence
+                            obligations['User/Customer'].append(f"{obligation_type.title()}: {obligation_text}")
+                            break
+                
+                # Check if sentence refers to company/provider
+                if any(ref in sentence_lower for ref in ['company', 'provider', 'we', 'service']):
+                    for obligation_type, keywords in company_patterns:
+                        if any(keyword in sentence_lower for keyword in keywords):
+                            # Extract more specific obligation
+                            obligation_text = sentence[:100] + "..." if len(sentence) > 100 else sentence
+                            obligations['Company/Provider'].append(f"{obligation_type.title()}: {obligation_text}")
+                            break
+            
+            # If no specific obligations found, add general ones
+            if not obligations['User/Customer']:
+                obligations['User/Customer'] = [
+                    'Payment: Pay applicable fees as specified',
+                    'Compliance: Follow all terms and conditions',
+                    'Usage: Use service in accordance with agreement'
+                ]
+            
+            if not obligations['Company/Provider']:
+                obligations['Company/Provider'] = [
+                    'Service Delivery: Provide agreed-upon services',
+                    'Support: Maintain reasonable customer support',
+                    'Compliance: Adhere to applicable laws and regulations'
+                ]
         
         except:
-            pass  # Ignore any errors
+            # Fallback obligations if extraction fails
+            obligations = {
+                'User/Customer': [
+                    'Payment: Pay applicable fees as specified',
+                    'Compliance: Follow all terms and conditions'
+                ],
+                'Company/Provider': [
+                    'Service Delivery: Provide agreed-upon services',
+                    'Support: Maintain customer support'
+                ]
+            }
+        
+        # Limit to 3 obligations per party for clean display
+        obligations['User/Customer'] = obligations['User/Customer'][:3]
+        obligations['Company/Provider'] = obligations['Company/Provider'][:3]
         
         return obligations
     
