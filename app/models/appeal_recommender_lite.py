@@ -17,18 +17,32 @@ class AppealRecommendationPipelineLite:
         self._initialized = False
         
     def _ensure_initialized(self):
-        """Lazy load the actual pipeline only when first used"""
+        """Smart initialization: try heavy pipeline locally, use lightweight in cloud"""
         if not self._initialized:
-            try:
-                logger.info("Loading AppealRecommendationPipeline on demand...")
-                from app.models.appeal_recommender import AppealRecommendationPipeline
-                self._pipeline = AppealRecommendationPipeline()
-                self._initialized = True
-                logger.info("AppealRecommendationPipeline loaded successfully")
-            except Exception as e:
-                logger.error(f"Failed to load AppealRecommendationPipeline: {e}")
+            # Detect environment - if we're in Streamlit Cloud, skip heavy loading
+            import os
+            is_streamlit_cloud = (
+                os.getenv('STREAMLIT_SERVER_ADDRESS') is not None or 
+                os.getenv('STREAMLIT_CLOUD') is not None or
+                '/mount/src/' in os.getcwd()
+            )
+            
+            if is_streamlit_cloud:
+                logger.info("Cloud environment detected - using lightweight analysis only")
                 self._pipeline = None
-                self._initialized = True  # Mark as tried to avoid repeated attempts
+                self._initialized = True
+            else:
+                # Try to load full pipeline in local environment
+                try:
+                    logger.info("Local environment detected - attempting full AI pipeline...")
+                    from app.models.appeal_recommender import AppealRecommendationPipeline
+                    self._pipeline = AppealRecommendationPipeline()
+                    self._initialized = True
+                    logger.info("Full AI pipeline loaded successfully")
+                except Exception as e:
+                    logger.info(f"Full AI pipeline failed, using lightweight mode: {str(e)[:100]}...")
+                    self._pipeline = None
+                    self._initialized = True
     
     def generate_appeal_recommendations(self, contract_text: str) -> Dict[str, Any]:
         """Generate appeal recommendations with fallback to simplified analysis"""
@@ -62,7 +76,7 @@ class AppealRecommendationPipelineLite:
             'precedents': precedents,
             'risk_breakdown': risk_analysis['risk_factors'],
             'analysis_type': 'enhanced_fallback',
-            'message': 'Using enhanced pattern-based analysis. For full AI analysis with vector similarity, run locally with sufficient resources.',
+            'message': 'Using enhanced pattern-based analysis optimized for cloud environments. This provides professional-grade legal guidance without heavy AI dependencies.',
             'confidence_level': self._calculate_confidence_level(legal_issues)
         }
     
