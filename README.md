@@ -142,6 +142,14 @@ This project is licensed under the MIT License.
 
 Created by [LiangPoYen](https://github.com/leonjas) - jasmineyen16008@gmail.com
 
+## 👥 **Contributors**
+
+Special thanks to the following contributors who helped make this project possible:
+
+- **Hong Ru Chan** 
+- **Mei Yue** 
+- **Xiaote Liu** 
+
 ## 🤝 **Contributing**
 
 Contributions, issues, and feature requests are welcome!
