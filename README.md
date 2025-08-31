@@ -1,12 +1,12 @@
-# 📄 Contract Analysis System - Unfair Clause Detection
+# 📄 Legal AI Deep Research - Comprehensive Contract Analysis System
 
-An advanced contract analysis system that uses **LexGLUE methodology** and state-of-the-art NLP models to detect potentially unfair clauses in contracts.
+An advanced **three-tier contract analysis platform** that combines intelligent summarization, unfair clause detection, and legal appeal recommendations using state-of-the-art NLP models and legal AI technologies.
 
 ## 📸 App Preview
 
 ![Contract Analysis App](images/screenshot.png)
 
-*🚀 Live demo: [Contract Analysis App](https://legalaideepresearch-rzy5kk9k2ygxudlavpsg4z.streamlit.app)*
+*🚀 Live demo: [Legal AI Deep Research Platform](https://legalaideepresearch-rzy5kk9k2ygxudlavpsg4z.streamlit.app)*
 
 ## 🎯 **Primary Features**
 
@@ -37,7 +37,7 @@ An advanced contract analysis system that uses **LexGLUE methodology** and state
 ## 🚀 **Quick Start**
 
 ### Online Demo
-Try the live demo: [Contract Analysis App](https://legalaideepresearch-rzy5kk9k2ygxudlavpsg4z.streamlit.app)
+Try the live demo: [Legal AI Deep Research Platform](https://legalaideepresearch-rzy5kk9k2ygxudlavpsg4z.streamlit.app)
 
 ### Local Installation
 
@@ -105,11 +105,34 @@ Try the live demo: [Contract Analysis App](https://legalaideepresearch-rzy5kk9k2
 ### Hybrid Approach
 Combines rule-based patterns, machine learning models, and vector similarity search for comprehensive contract analysis.
 
+## 🎛 **User Interface**
+
+The platform features an intuitive **three-tab interface**:
+
+1. **📄 Contract Summarization Tab**
+   - Upload contracts (PDF, DOCX, TXT) or paste text directly
+   - Extract key parties, dates, financial terms, and obligations
+   - Generate executive summaries with estimated read times
+   - Identify contract types and governing law
+
+2. **⚖️ Unfair Clause Detection Tab** 
+   - ML-powered analysis using LexGLUE models
+   - Confidence scoring and severity assessment
+   - Pattern-based and transformer-based detection
+   - Export results in multiple formats
+
+3. **🎯 Appeal Recommendations Tab**
+   - FAISS-powered legal precedent search
+   - Risk assessment and appeal strategy generation
+   - Contextual legal reasoning and case precedents
+   - Actionable recommendations with strength ratings
+
 ## 🎛 **Configuration**
 
-- **Confidence Threshold**: Adjustable sensitivity for unfair clause detection
-- **Analysis Method**: Choose between Pattern-based, ML-based, or Both
-- **Export Options**: Multiple output formats for analysis results
+- **Analysis Sensitivity**: Adjustable confidence thresholds for all three features
+- **Model Selection**: Choose between multiple legal AI models
+- **Export Options**: Multiple output formats (JSON, CSV, PDF reports)
+- **Processing Options**: Batch analysis and real-time processing
 
 ## 📄 **License**
 

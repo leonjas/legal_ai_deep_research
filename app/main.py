@@ -13,7 +13,7 @@ from app.components.contract_analysis_ui import ContractAnalysisUI
 
 # Page configuration
 st.set_page_config(
-    page_title="Contract Analysis - Unfair Clause Detection",
+    page_title="Legal AI Deep Research - Contract Analysis Platform",
     page_icon="📄",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -113,25 +113,29 @@ st.markdown(
 )
 
 # App title
-st.title("📄 Contract Analysis - Unfair Clause Detection")
+st.title("📄 Legal AI Deep Research - Contract Analysis Platform")
 st.markdown(
     """
-    **Advanced contract analysis system using LexGLUE methodology for detecting potentially unfair clauses.**
+    **Comprehensive three-tier contract analysis system with intelligent summarization, unfair clause detection, and legal appeal recommendations.**
     
-    Upload contract documents (PDF, DOCX, TXT) or paste text directly to identify and analyze potentially unfair terms using state-of-the-art NLP models.
+    Upload contract documents (PDF, DOCX, TXT) or paste text directly to access advanced legal AI analysis across multiple dimensions.
     """
 )
 
 # Simple sidebar with information
 with st.sidebar:
-    st.markdown("## 📄 Contract Analysis")
+    st.markdown("## 📄 Legal AI Deep Research")
     st.markdown("""
-    **Features:**
-    - Pattern-based detection
-    - ML-based classification  
-    - Risk assessment
-    - Detailed recommendations
-    - Export capabilities
+    **Three Core Features:**
+    - Contract summarization
+    - Unfair clause detection
+    - Appeal recommendations
+    
+    **Advanced Capabilities:**
+    - Risk assessment & scoring
+    - Legal precedent analysis
+    - Multi-format processing
+    - Export & reporting tools
     
     **Supported formats:**
     - PDF, DOCX, DOC, TXT
