@@ -390,16 +390,6 @@ with tab3:
                     # Display appeal recommendations
                     st.success("✅ Appeal analysis completed!")
                     
-                    # Show analysis type and quality
-                    if appeal_result.get('analysis_type') == 'enhanced_fallback':
-                        st.info("🧠 **Analysis Mode**: Advanced Pattern-Based Legal Analysis\n\n" + 
-                               appeal_result.get('message', '') + 
-                               f"\n\n**Confidence**: {appeal_result.get('confidence_level', 'Medium')}")
-                    elif appeal_result.get('analysis_type') == 'full_ai':
-                        st.success("🤖 **Analysis Mode**: Full AI Pipeline with FAISS Vector Search")
-                    else:
-                        st.info("🔄 **Analysis Mode**: Simplified Analysis")
-                    
                     # Risk Assessment with enhanced display
                     risk_score = appeal_result.get('risk_score', 0.5)
                     col1, col2, col3, col4 = st.columns(4)
