@@ -105,7 +105,7 @@ class ContractAnalysisUI:
                             os.unlink(tmp_path)
                             
                             # Display results
-                            ContractAnalysisUI.render_pipeline_results(result)
+                            ContractAnalysisUI.render_pipeline_results(result, uploaded_file.name)
                             
                         else:
                             # Run pipeline on text
@@ -126,7 +126,7 @@ class ContractAnalysisUI:
                 st.warning("⚠️ Please upload a PDF file or enter contract text to analyze.")
     
     @staticmethod
-    def render_pipeline_results(result: UnfairDetectionResult):
+    def render_pipeline_results(result: UnfairDetectionResult, filename: str = "Document"):
         """Render results from the modular pipeline"""
         
         # Header with summary
@@ -138,7 +138,7 @@ class ContractAnalysisUI:
         col1, col2, col3, col4 = st.columns(4)
         
         with col1:
-            st.metric("File", summary['file_name'])
+            st.metric("Document", filename)
         
         with col2:
             st.metric("Total Clauses", summary['total_clauses'])

@@ -270,14 +270,29 @@ with tab1:
                         for obligation in obligations:
                             st.markdown(f"  • {obligation}")
                     
-                    # Contract Details
+                    # Contract Details with enhanced styling
                     col1, col2, col3 = st.columns(3)
                     with col1:
-                        st.metric("Contract Type", summary.contract_type)
+                        st.markdown(f"""
+                        <div style="text-align: center; padding: 15px; background-color: #f0f2f6; border-radius: 10px; border: 1px solid #d1d5db;">
+                            <h4 style="margin: 0; color: #374151;">Contract Type</h4>
+                            <h2 style="margin: 5px 0; color: #1f2937;">{summary.contract_type}</h2>
+                        </div>
+                        """, unsafe_allow_html=True)
                     with col2:
-                        st.metric("Word Count", summary.word_count)
+                        st.markdown(f"""
+                        <div style="text-align: center; padding: 15px; background-color: #f0f2f6; border-radius: 10px; border: 1px solid #d1d5db;">
+                            <h4 style="margin: 0; color: #374151;">Word Count</h4>
+                            <h2 style="margin: 5px 0; color: #1f2937;">{summary.word_count:,}</h2>
+                        </div>
+                        """, unsafe_allow_html=True)
                     with col3:
-                        st.metric("Est. Read Time", f"{summary.estimated_read_time} min")
+                        st.markdown(f"""
+                        <div style="text-align: center; padding: 15px; background-color: #f0f2f6; border-radius: 10px; border: 1px solid #d1d5db;">
+                            <h4 style="margin: 0; color: #374151;">Est. Read Time</h4>
+                            <h2 style="margin: 5px 0; color: #1f2937;">{summary.estimated_read_time} min</h2>
+                        </div>
+                        """, unsafe_allow_html=True)
                     
                 except Exception as e:
                     st.error(f"❌ Summarization failed: {str(e)}")
