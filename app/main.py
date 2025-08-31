@@ -8,7 +8,8 @@ os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
 # Add project root to Python path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from app.components.contract_upload import ContractUploadComponent
+# Import only what we need for the main UI
+from app.components.contract_analysis_ui import ContractAnalysisUI
 
 # Page configuration
 st.set_page_config(
