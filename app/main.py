@@ -185,7 +185,7 @@ tab1, tab2, tab3 = st.tabs([
 # Import all required modules
 from app.components.contract_analysis_ui import ContractAnalysisUI
 from app.models.contract_summarizer import ContractSummarizer
-from app.models.appeal_recommender import AppealRecommendationPipeline
+# Note: AppealRecommendationPipeline will be imported lazily to avoid startup crashes
 
 with tab1:
     st.markdown("### 📄 Contract Summarization")
@@ -332,8 +332,10 @@ with tab3:
         if uploaded_file_appeal is not None or contract_text_appeal.strip():
             with st.spinner("Analyzing contract for appeal opportunities..."):
                 try:
-                    # Initialize appeal recommender
-                    appeal_pipeline = AppealRecommendationPipeline()
+                    # Initialize appeal recommender (lazy loading to prevent startup crashes)
+                    with st.spinner("Loading appeal analysis models (this may take a moment on first use)..."):
+                        from app.models.appeal_recommender import AppealRecommendationPipeline
+                        appeal_pipeline = AppealRecommendationPipeline()
                     
                     if uploaded_file_appeal:
                         # Process uploaded file
@@ -395,7 +397,18 @@ with tab3:
                     
                 except Exception as e:
                     st.error(f"❌ Appeal analysis failed: {str(e)}")
-                    st.error("Please check the file format and try again.")
+                    st.error("This feature requires significant computational resources and may not be available in all environments.")
+                    st.info("💡 **Tip**: Try the other features (Contract Summarization and Unfair Clause Detection) which are more lightweight.")
+                    
+                    # Show technical details in an expander for debugging
+                    with st.expander("🔧 Technical Details (for debugging)"):
+                        st.code(f"Error details: {str(e)}")
+                        st.markdown("""
+                        **Common causes:**
+                        - Insufficient memory for loading AI models
+                        - Network issues downloading model weights
+                        - FAISS or SentenceTransformer compatibility issues
+                        """)
         else:
             st.warning("⚠️ Please upload a file or enter contract text for appeal analysis.")
 
