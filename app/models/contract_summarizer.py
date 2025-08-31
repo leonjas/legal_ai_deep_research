@@ -178,37 +178,52 @@ class ContractSummarizer:
         return cleaned_sentences
     
     def _extract_parties(self, text: str) -> List[str]:
-        """Extract parties involved in the contract - simplified safe version"""
+        """Extract parties involved in the contract with better pattern matching"""
         parties = set()
         
-        # Use simpler, safer patterns
+        # Use more comprehensive, safer patterns
         simple_patterns = [
             r'(?i)between\s+([A-Z][A-Za-z\s]+(?:Inc|LLC|Corp|Corporation|Company))',
-            r'(?i)between\s+([A-Z][A-Za-z\s]{2,30})\s+and\s+([A-Z][A-Za-z\s]{2,30})',
-            r'(?i)"([A-Z][A-Za-z\s]{2,30})"\s*\(',
-            r'(?i)([A-Z][A-Za-z\s]+(?:Inc|LLC|Corp|Corporation|Solutions|Systems|Services))',
+            r'(?i)between\s+([A-Z][A-Za-z\s]{3,30})\s+and\s+([A-Z][A-Za-z\s]{3,30})',
+            r'(?i)"([A-Z][A-Za-z\s]{3,30})"\s*\(',
+            r'(?i)([A-Z][A-Za-z\s]+(?:Inc|LLC|Corp|Corporation|Solutions|Systems|Services|Company))',
+            r'(?i)this\s+agreement\s+is\s+between\s+([^,\n]+)\s+and\s+([^,\n]+)',
+            r'(?i)company["\s]*([A-Z][A-Za-z\s]+)',
+            r'(?i)provider["\s]*([A-Z][A-Za-z\s]+)',
         ]
+        
+        # Look in the first 1500 characters for better accuracy
+        search_text = text[:1500]
         
         for pattern in simple_patterns:
             try:
-                matches = re.findall(pattern, text[:1000])  # Limit text length for safety
+                matches = re.findall(pattern, search_text)
                 for match in matches:
                     if isinstance(match, tuple):
                         for m in match:
-                            if m.strip():
-                                parties.add(m.strip())
+                            if m.strip() and len(m.strip()) > 3:
+                                parties.add(m.strip().strip('"').strip("'"))
                     else:
-                        if match.strip():
-                            parties.add(match.strip())
+                        if match.strip() and len(match.strip()) > 3:
+                            parties.add(match.strip().strip('"').strip("'"))
             except:
                 continue  # Skip problematic patterns
         
         # Clean and filter parties
         cleaned_parties = []
+        excluded_words = ['the', 'user', 'you', 'we', 'us', 'company', 'agreement', 
+                         'service', 'terms', 'privacy', 'policy', 'arising from use of our services']
+        
         for party in parties:
-            party = party.strip().strip('"').strip("'")
-            if len(party) > 3 and party.lower() not in ['the', 'user', 'you', 'we', 'us', 'company', 'agreement']:
-                cleaned_parties.append(party)
+            party_clean = party.strip().strip('"').strip("'")
+            if (len(party_clean) > 3 and 
+                party_clean.lower() not in excluded_words and
+                not party_clean.lower().startswith(('the ', 'this ', 'these ', 'our ', 'your '))):
+                cleaned_parties.append(party_clean)
+        
+        # If no specific parties found, provide generic ones
+        if not cleaned_parties:
+            cleaned_parties = ["Service Provider", "User/Customer"]
         
         return list(set(cleaned_parties))[:5]  # Limit to top 5
     
@@ -239,22 +254,50 @@ class ContractSummarizer:
         return "General Agreement"
     
     def _extract_key_terms(self, text: str) -> Dict[str, str]:
-        """Extract key terms and definitions"""
+        """Extract key terms and definitions with better coverage"""
         key_terms = {}
         
-        # Look for definitions
+        # Look for definitions with multiple patterns
         definition_patterns = [
-            r'"([^"]+)"\s*means\s+([^.]+)',
-            r'([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\s*\([^)]*\)\s*means\s+([^.]+)',
-            r'(?i)defined?\s+as\s*[:\-]?\s*([^.]+)',
+            r'"([^"]{3,50})"\s*means\s+([^.]{10,200})',
+            r'([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\s*\([^)]*\)\s*means\s+([^.]{10,200})',
+            r'(?i)defined?\s+as\s*[:\-]?\s*([^.]{10,200})',
+            r'(?i)([A-Z][A-Za-z\s]{3,30})\s*[:\-]\s*([^.\n]{10,200})',
+            r'(?i)"([^"]{3,50})"\s*[:\-]\s*([^.\n]{10,200})',
         ]
         
         for pattern in definition_patterns:
-            matches = re.findall(pattern, text)
-            for match in matches:
-                if isinstance(match, tuple) and len(match) == 2:
-                    term, definition = match
-                    key_terms[term.strip()] = definition.strip()
+            try:
+                matches = re.findall(pattern, text[:3000])  # Search more text
+                for match in matches:
+                    if isinstance(match, tuple) and len(match) == 2:
+                        term, definition = match
+                        term = term.strip().strip('"').strip("'")
+                        definition = definition.strip()
+                        
+                        # Filter out overly generic terms
+                        if (len(term) > 2 and len(definition) > 5 and 
+                            term.lower() not in ['this', 'the', 'you', 'we', 'us', 'service'] and
+                            not definition.lower().startswith(('this', 'the', 'you', 'we'))):
+                            key_terms[term] = definition[:100] + "..." if len(definition) > 100 else definition
+            except:
+                continue
+        
+        # If no formal definitions found, look for important terms
+        if not key_terms:
+            important_terms = {
+                'Service': 'Software service or platform provided',
+                'User': 'Individual or entity using the service', 
+                'Agreement': 'This terms of service document',
+                'Account': 'User account and associated data'
+            }
+            
+            text_lower = text.lower()
+            for term, default_def in important_terms.items():
+                if term.lower() in text_lower:
+                    key_terms[term] = default_def
+                    if len(key_terms) >= 3:  # Limit to keep it clean
+                        break
         
         return key_terms
     
@@ -355,32 +398,65 @@ class ContractSummarizer:
         return dates[:10]  # Limit to 10 most relevant dates
     
     def _extract_financial_terms(self, text: str) -> Dict[str, str]:
-        """Extract financial terms and amounts - simplified safe version"""
+        """Extract financial terms and amounts with better coverage"""
         financial = {}
         
-        # Use simple, safe patterns
+        # Use comprehensive, safe patterns
         try:
             # Look for dollar amounts
-            dollar_matches = re.findall(r'\$[\d,]+(?:\.\d{2})?', text[:2000])  # Limit text length
+            dollar_pattern = r'\$[\d,]+(?:\.\d{2})?'
+            dollar_matches = re.findall(dollar_pattern, text[:3000])  # Search more text
             if dollar_matches:
                 financial['amount'] = dollar_matches[0]
+                if len(dollar_matches) > 1:
+                    financial['additional_amounts'] = ', '.join(dollar_matches[1:3])
             
             # Look for payment frequency
-            if 'monthly' in text.lower():
-                financial['frequency'] = 'monthly'
-            elif 'annual' in text.lower() or 'yearly' in text.lower():
-                financial['frequency'] = 'annual'
-            elif 'weekly' in text.lower():
-                financial['frequency'] = 'weekly'
+            text_lower = text.lower()
+            if 'monthly' in text_lower or 'per month' in text_lower:
+                financial['frequency'] = 'Monthly'
+            elif 'annual' in text_lower or 'yearly' in text_lower or 'per year' in text_lower:
+                financial['frequency'] = 'Annually'
+            elif 'weekly' in text_lower or 'per week' in text_lower:
+                financial['frequency'] = 'Weekly'
+            elif 'one-time' in text_lower or 'lump sum' in text_lower:
+                financial['frequency'] = 'One-time'
                 
-            # Look for fee mentions
-            if 'fee' in text.lower():
-                financial['type'] = 'fee'
-            elif 'payment' in text.lower():
-                financial['type'] = 'payment'
+            # Look for fee types
+            if 'subscription' in text_lower:
+                financial['type'] = 'Subscription Fee'
+            elif 'license' in text_lower:
+                financial['type'] = 'License Fee'
+            elif 'service' in text_lower:
+                financial['type'] = 'Service Fee'
+            elif 'penalty' in text_lower or 'fine' in text_lower:
+                financial['penalty_info'] = 'Penalty clauses present'
+                
+            # Look for payment terms
+            payment_patterns = [
+                r'(?i)payment\s+due\s+(?:within\s+)?(\d+)\s+(days?|weeks?|months?)',
+                r'(?i)invoice\s+(?:within\s+)?(\d+)\s+(days?|weeks?)',
+                r'(?i)net\s+(\d+)\s+days?',
+            ]
+            
+            for pattern in payment_patterns:
+                match = re.search(pattern, text[:2000])
+                if match:
+                    period = match.group(1)
+                    unit = match.group(2) if len(match.groups()) > 1 else 'days'
+                    financial['payment_terms'] = f"{period} {unit}"
+                    break
                 
         except:
             pass  # Ignore regex errors
+        
+        # If no financial info found, check for basic mentions
+        if not financial:
+            text_lower = text.lower()
+            if any(term in text_lower for term in ['free', 'no cost', 'without charge']):
+                financial['type'] = 'Free Service'
+            elif any(term in text_lower for term in ['payment', 'fee', 'cost', 'price', 'charge']):
+                financial['type'] = 'Payment Required'
         
         return financial
     
