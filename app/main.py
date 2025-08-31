@@ -332,10 +332,10 @@ with tab3:
         if uploaded_file_appeal is not None or contract_text_appeal.strip():
             with st.spinner("Analyzing contract for appeal opportunities..."):
                 try:
-                    # Initialize appeal recommender (lazy loading to prevent startup crashes)
+                    # Initialize appeal recommender (lightweight wrapper to prevent crashes)
                     with st.spinner("Loading appeal analysis models (this may take a moment on first use)..."):
-                        from app.models.appeal_recommender import AppealRecommendationPipeline
-                        appeal_pipeline = AppealRecommendationPipeline()
+                        from app.models.appeal_recommender_lite import AppealRecommendationPipelineLite
+                        appeal_pipeline = AppealRecommendationPipelineLite()
                     
                     if uploaded_file_appeal:
                         # Process uploaded file
@@ -360,6 +360,10 @@ with tab3:
                     # Display appeal recommendations
                     st.success("✅ Appeal analysis completed!")
                     
+                    # Show analysis type
+                    if appeal_result.get('analysis_type') == 'simplified_fallback':
+                        st.info("🔄 **Note**: Using simplified analysis mode. " + appeal_result.get('message', ''))
+                    
                     # Risk Assessment
                     risk_score = appeal_result.get('risk_score', 0.5)
                     col1, col2, col3 = st.columns(3)
@@ -376,15 +380,18 @@ with tab3:
                     st.markdown("## 🎯 Recommended Appeal Strategies")
                     
                     recommendations = appeal_result.get('recommendations', [])
-                    for i, rec in enumerate(recommendations, 1):
-                        with st.expander(f"📋 Recommendation #{i}: {rec.get('title', 'Strategy')}"):
-                            st.markdown(f"**Strategy**: {rec.get('strategy', 'N/A')}")
-                            st.markdown(f"**Reasoning**: {rec.get('reasoning', 'N/A')}")
-                            st.markdown(f"**Strength**: {rec.get('strength', 'Medium')}")
-                            if rec.get('precedents'):
-                                st.markdown("**Supporting Precedents:**")
-                                for precedent in rec.get('precedents', []):
-                                    st.markdown(f"• {precedent}")
+                    if recommendations:
+                        for i, rec in enumerate(recommendations, 1):
+                            with st.expander(f"📋 Recommendation #{i}: {rec.get('title', 'Strategy')}"):
+                                st.markdown(f"**Strategy**: {rec.get('strategy', 'N/A')}")
+                                st.markdown(f"**Reasoning**: {rec.get('reasoning', 'N/A')}")
+                                st.markdown(f"**Strength**: {rec.get('strength', 'Medium')}")
+                                if rec.get('precedents'):
+                                    st.markdown("**Supporting Precedents:**")
+                                    for precedent in rec.get('precedents', []):
+                                        st.markdown(f"• {precedent}")
+                    else:
+                        st.info("No specific recommendations generated. Consider consulting with a legal professional.")
                     
                     # Legal Precedents
                     if appeal_result.get('precedents'):
