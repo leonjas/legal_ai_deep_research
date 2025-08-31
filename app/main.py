@@ -225,9 +225,8 @@ with tab1:
                             tmp_path = tmp_file.name
                         
                         # Extract text and summarize
-                        from app.utils.pdf_parser import PDFParser
-                        parser = PDFParser()
-                        text = parser.extract_text(tmp_path)
+                        from app.utils.pdf_parser import extract_text
+                        text = extract_text(tmp_path)
                         summary = summarizer.summarize_contract(text)
                         
                         # Clean up
@@ -331,9 +330,8 @@ with tab3:
                             tmp_path = tmp_file.name
                         
                         # Extract text and analyze
-                        from app.utils.pdf_parser import PDFParser
-                        parser = PDFParser()
-                        text = parser.extract_text(tmp_path)
+                        from app.utils.pdf_parser import extract_text
+                        text = extract_text(tmp_path)
                         appeal_result = appeal_pipeline.generate_appeal_recommendations(text)
                         
                         # Clean up
