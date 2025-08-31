@@ -440,34 +440,6 @@ with tab3:
                                     if precedent.get('jurisdiction'):
                                         st.markdown(f"**Jurisdiction**: {precedent.get('jurisdiction')}")
                     
-                    # Analysis Methodology
-                    with st.expander("🔬 Analysis Methodology & AI Intelligence"):
-                        st.markdown("""
-                        **This analysis uses sophisticated AI techniques:**
-                        
-                        🧠 **Advanced Pattern Recognition**
-                        - Multi-layered regex patterns with contextual analysis
-                        - Confidence scoring based on legal terminology density
-                        - Pattern specificity weighting and validation
-                        
-                        ⚖️ **Legal Knowledge Integration**
-                        - Real case law database with precedent matching
-                        - Risk factor analysis across multiple legal dimensions
-                        - Jurisdiction-aware legal reasoning
-                        
-                        📊 **Dynamic Risk Assessment**
-                        - Weighted scoring across liability, operational, and legal risks
-                        - Severity classification with contextual adjustment
-                        - Compound risk analysis for multiple unfair clauses
-                        
-                        🎯 **Intelligent Recommendations**
-                        - Strategy generation based on detected patterns
-                        - Precedent-backed legal reasoning
-                        - Negotiation priority ranking with business impact analysis
-                        
-                        **Note**: This is AI-generated analysis, not hard-coded responses. Results adapt dynamically to your specific contract content.
-                        """)
-                    
                     # Risk Breakdown Detail
                     if appeal_result.get('risk_breakdown'):
                         with st.expander("📊 Detailed Risk Analysis"):
